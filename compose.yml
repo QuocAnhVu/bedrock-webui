@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  bedrock-access-gateway:
+    build:
+      context: ./bedrock-access-gateway/src # Path to the submodule's source
+      dockerfile: Dockerfile_ecs           # Use Dockerfile_ecs explicitly
+    environment:
+      # !! REPLACE WITH YOUR ACTUAL AWS CREDENTIALS AND REGION !!
+      AWS_ACCESS_KEY_ID: "YOUR_AWS_ACCESS_KEY_ID"
+      AWS_SECRET_ACCESS_KEY: "YOUR_AWS_SECRET_ACCESS_KEY"
+      AWS_REGION: "your-aws-region"
+      DEBUG: "true" # Optional: set to "false" for less verbose logs
+    ports:
+      - "8000:80"
+    networks:
+      - webui-bedrock-network
+    restart: always
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    ports:
+      - "3000:8080"
+    volumes:
+      - open-webui-data:/app/backend/data
+    networks:
+      - webui-bedrock-network
+    depends_on:
+      - bedrock-access-gateway # Ensures BAG starts before Open WebUI
+    restart: always
+
+networks:
+  webui-bedrock-network:
+    name: webui-bedrock-network # Explicitly naming it for clarity
+
+volumes:
+  open-webui-data:
